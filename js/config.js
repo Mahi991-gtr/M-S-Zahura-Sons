@@ -11,7 +11,7 @@
 //
 // EMAIL and PHONE are also shown on the Contact page. Leave a value empty to hide it.
 window.ZAHURA_CONFIG = {
-  EMAIL: '',            // e.g. 'info@yourcompany.com'
-  PHONE: '',            // e.g. '+880 1XXX-XXXXXX'
-  WEB3FORMS_KEY: ''     // e.g. 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+  EMAIL: 'zahurasons774@gmail.com',            // e.g. 'info@yourcompany.com'
+  PHONE: '01882597202',            // e.g. '+880 1XXX-XXXXXX'
+  WEB3FORMS_KEY: 'ea9dd4ed-ba54-488e-91a2-edfa4f2bea36'     // e.g. 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
 };
