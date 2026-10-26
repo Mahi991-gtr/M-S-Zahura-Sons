@@ -2,6 +2,7 @@
   'use strict';
   var CFG = window.ZAHURA_CONFIG || {};
   var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var isMobile = window.matchMedia('(max-width: 860px)');
 
   /* ---------- Mobile menu ---------- */
   var menu = document.querySelector('.menu');
@@ -19,7 +20,6 @@
   /* ---------- Sticky navigation: solid bar, hides on scroll down, returns on scroll up ---------- */
   var nav = document.querySelector('.nav');
   if (nav) {
-    nav.addEventListener('animationend', function () { nav.style.animation = 'none'; }, { once: true });
     var lastY = window.pageYOffset, tick = false;
     var onNav = function () {
       var y = window.pageYOffset;
@@ -36,18 +36,35 @@
     onNav();
   }
 
-  /* ---------- Hero parallax (only the photo moves) ---------- */
+  /* ---------- Hero: full-screen photo with a slow upward drift while scrolling (all pages) ---------- */
   var hero = document.querySelector('.hero');
-  if (hero && !reduce) {
-    var pt = false;
-    window.addEventListener('scroll', function () {
-      if (pt) return; pt = true;
-      requestAnimationFrame(function () {
-        var y = window.pageYOffset;
-        if (y < 1400) hero.style.setProperty('--py', (y * 0.18).toFixed(1) + 'px');
-        pt = false;
-      });
-    }, { passive: true });
+  if (hero) {
+    /* Pick a photo that fits the screen (photo sets use tall and wide frames). */
+    var desktopImg = hero.getAttribute('data-hero');
+    var mobileImg = hero.getAttribute('data-hero-mobile');
+    var applyHero = function () {
+      var src = (isMobile.matches && mobileImg) ? mobileImg : (desktopImg || '');
+      hero.style.setProperty('--hero-img', src ? 'url(' + src + ')' : '');
+    };
+    if (desktopImg) {
+      applyHero();
+      if (mobileImg && window.matchMedia) isMobile.addEventListener ? isMobile.addEventListener('change', applyHero) : isMobile.addListener(applyHero);
+    }
+    /* Slow drift: photo moves up gradually as you scroll down (Harper-style). */
+    if (!reduce) {
+      var pt = false;
+      var drift = function () {
+        if (pt) return; pt = true;
+        requestAnimationFrame(function () {
+          var y = window.pageYOffset;
+          var h = hero.offsetHeight || 1;
+          if (y < h * 1.6) hero.style.setProperty('--py', (y * 0.22).toFixed(1) + 'px');
+          pt = false;
+        });
+      };
+      window.addEventListener('scroll', drift, { passive: true });
+      window.addEventListener('resize', drift);
+    }
   }
 
   /* ---------- Lightbox gallery: arrows, keyboard, swipe, counter ---------- */
@@ -159,7 +176,12 @@
         it.el.hidden = hide;
         if (!hide) { it.el.classList.remove('rv', 'in'); it.el.classList.add('flt'); }
       });
-      if (scroll) bar.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+      if (scroll) {
+        /* Scroll to the projects list, not the chips bar, so the chip row slides out of the way. */
+        var target = document.getElementById('projects');
+        if (target && !reduce) window.scrollTo({ top: target.offsetTop - 8, behavior: 'smooth' });
+        else if (target) window.scrollTo(0, target.offsetTop - 8);
+      }
       try { history.replaceState(null, '', key === 'all' ? location.pathname : '#' + key); } catch (e) {}
     };
     bar.addEventListener('click', function (e) {
@@ -208,7 +230,6 @@
     var submit = form.querySelector('button[type="submit"]');
     var say = function (cls, msg) { status.className = cls; status.textContent = msg; };
 
-    // Inline validation feedback as the visitor leaves each field
     form.querySelectorAll('input[required], textarea[required]').forEach(function (f) {
       f.addEventListener('blur', function () { f.classList.toggle('bad', !f.checkValidity()); });
       f.addEventListener('input', function () { if (f.checkValidity()) f.classList.remove('bad'); });
@@ -219,7 +240,7 @@
       if (!form.checkValidity()) { form.reportValidity(); return; }
       var d = {};
       new FormData(form).forEach(function (v, k) { d[k] = String(v).trim(); });
-      if (d.botcheck) { say('ok', 'Thank you. Your message has been sent.'); form.reset(); return; } // spam trap
+      if (d.botcheck) { say('ok', 'Thank you. Your message has been sent.'); form.reset(); return; }
 
       if (CFG.WEB3FORMS_KEY) {
         say('', 'Sending…'); submit.disabled = true; submit.classList.add('loading');
