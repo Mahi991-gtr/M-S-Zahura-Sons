@@ -39,12 +39,15 @@
   /* ---------- Hero: full-screen photo with a slow upward drift while scrolling (all pages) ---------- */
   var hero = document.querySelector('.hero');
   if (hero) {
-    /* Pick a photo that fits the screen (photo sets use tall and wide frames). */
+    /* Resolve the hero photo relative to the SITE ROOT, not the css folder,
+       so the image always loads no matter which page or folder you are on. */
+    var root = (location.pathname.replace(/[^\/]*$/, ''));
+    var abs = function (p) { return root + p.replace(/^\//, ''); };
     var desktopImg = hero.getAttribute('data-hero');
     var mobileImg = hero.getAttribute('data-hero-mobile');
     var applyHero = function () {
       var src = (isMobile.matches && mobileImg) ? mobileImg : (desktopImg || '');
-      hero.style.setProperty('--hero-img', src ? 'url(' + src + ')' : '');
+      hero.style.setProperty('--hero-img', src ? 'url(' + abs(src) + ')' : '');
     };
     if (desktopImg) {
       applyHero();
@@ -177,7 +180,6 @@
         if (!hide) { it.el.classList.remove('rv', 'in'); it.el.classList.add('flt'); }
       });
       if (scroll) {
-        /* Scroll to the projects list, not the chips bar, so the chip row slides out of the way. */
         var target = document.getElementById('projects');
         if (target && !reduce) window.scrollTo({ top: target.offsetTop - 8, behavior: 'smooth' });
         else if (target) window.scrollTo(0, target.offsetTop - 8);
